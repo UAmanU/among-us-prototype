@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(RAYLIB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib")
+set(RAYLIB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/raylib")
 
 if(NOT EXISTS "${RAYLIB_ROOT}/raylib.h" OR NOT EXISTS "${RAYLIB_ROOT}/libraylib.a")
     message(FATAL_ERROR "Raylib files were not found in ${RAYLIB_ROOT}")
@@ -21,10 +21,27 @@ set_target_properties(raylib PROPERTIES
 add_executable(among_us_prototype
     src/main.cpp
     src/game.cpp
+    src/map.cpp
+    src/task_game.cpp
+    src/Core/ProgrammLauncher.cpp
+    src/Game/GameLauncher.cpp
+    src/ConfigManager/ConfigManager.cpp
+    src/Menu/Menu.cpp
+    src/GUI/MenuRenderer.cpp
 )
 
-target_include_directories(among_us_prototype PRIVATE include)
+target_include_directories(among_us_prototype PRIVATE include "${RAYLIB_ROOT}")
 target_link_libraries(among_us_prototype PRIVATE raylib)
+
+add_custom_command(TARGET among_us_prototype POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/images"
+        "$<TARGET_FILE_DIR:among_us_prototype>/images"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/Config"
+        "$<TARGET_FILE_DIR:among_us_prototype>/Config"
+    COMMENT "Copying game images beside the executable"
+)
 
 if(MSVC)
     target_compile_options(among_us_prototype PRIVATE /W4)

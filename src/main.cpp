@@ -1,19 +1,10 @@
-#include "game.hpp"
+#include "Core/ProgrammLauncher.hpp"
+
+#include <memory>
 
 int main() {
-    InitWindow(1280, 720, "Social Deduction Prototype");
-    SetTargetFPS(60);
-
-    Game game;
-    while (!WindowShouldClose()) {
-        game.update(GetFrameTime());
-
-        BeginDrawing();
-        ClearBackground(Color{13, 20, 34, 255});
-        game.draw();
-        EndDrawing();
-    }
-
-    CloseWindow();
+    auto launcher = std::make_unique<ProgrammLauncher>();
+    if (!launcher->prepare()) return 1;
+    launcher->start();
     return 0;
 }

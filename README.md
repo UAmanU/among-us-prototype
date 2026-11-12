@@ -7,68 +7,72 @@
 
 ## Overview
 
-A small, local, single-player prototype for a social-deduction game. One player and four computer-controlled agents receive hidden roles; exactly one agent is the saboteur. The crew can complete station tasks, while the saboteur can eliminate crew members and trigger a critical system failure. Reports and emergency meetings lead to a vote.
+A local single-player social-deduction prototype. Choose one of three maps, set a match for 4–12 participants, and play with computer-controlled crewmates and impostors. The round includes interactive tasks, sabotage, reporting, meetings, and voting.
 
-The current build uses original, code-drawn placeholder graphics and does not load files from `images/`. Local files in `images/` and `lib/` are excluded by `.gitignore`; the Raylib header and static library must be supplied locally before building a fresh checkout.
+## Controls and Rules
 
-## How to Play
+- **WASD / arrow keys:** move.
+- **E:** use a nearby task or repair a critical system.
+- **R:** report a nearby body.
+- **Q:** call one emergency meeting per round.
+- **F / G:** eliminate a nearby crewmate / sabotage as an impostor.
+- **Meetings:** select a player and press Enter to vote; ties and skips eject nobody.
+- **Escape:** open settings. Enter at the round results returns to the lobby.
 
-- Move with **WASD** or the **arrow keys**.
-- As crew, press **E** beside an unfinished station to complete its task. During a critical failure, press **E** beside the station core to repair it.
-- Press **Q** once per round to call an emergency meeting.
-- Press **R** beside an eliminated crew member to report the incident.
-- During a meeting, use the arrow keys to select a player or skip, then press **Enter** to vote. A tie ejects nobody.
-- As the saboteur, press **F** near a crew member to eliminate them and **G** to trigger a critical failure.
-- Press **Enter** after a round ends to start another round.
+Crewmates win by completing all tasks or eliminating every impostor. Impostors win by reaching parity with the crew or allowing critical sabotage to expire.
 
-The crew wins by completing every station task or removing the saboteur. The saboteur wins when the remaining crew are outnumbered or the critical failure timer expires.
+## Architecture
 
-## Project Structure
+`main.cpp` creates `ProgrammLauncher` through `std::unique_ptr`. `ILauncher` defines the common prepare/start lifecycle for application and game launchers. `ProgrammLauncher` initializes Raylib from `Config/config.json` and owns the application loop, `Menu`, and `GameLauncher`. `GameLauncher` owns the game instance and delegates update, input, draw, continuation, and result queries.
+
+`ConfigManager` loads configuration once and provides typed getters. `GameMap` contains room connectivity, walkability, and station data. `TaskGame` implements task interactions.
+
+**Current migration limitation:** the existing `Game` still combines game rules, menu flow, and rendering, and `GameMap` / `TaskGame` still issue Raylib drawing calls. The new `Menu` and `MenuRenderer` are a small standalone foundation and are not yet connected to the legacy in-game menu. These are the next extraction steps needed to complete the requested ownership boundaries; the launch/configuration layer and folder layout are in place.
+
+## Structure
 
 ```text
-among-us-prototype/
-├── CMakeLists.txt
-├── GAME-LOGIC.md
-├── README.md
-├── include/
-│   └── game.hpp
-├── src/
-│   ├── game.cpp
-│   └── main.cpp
-├── images/                 # Local-only assets; ignored by Git
-├── lib/                    # Local Raylib files; ignored by Git
-└── build/                  # CMake build output; ignored by Git
+Config/config.json
+include/
+├── ConfigManager/
+├── Core/             # ILauncher, ProgrammLauncher, program state
+├── GUI/              # MenuRenderer foundation
+├── Game/             # GameLauncher, game/result states, map/task enums
+├── Menu/             # Menu controller and menu state
+├── Object/           # Object enums and future game objects
+├── game.hpp          # Legacy game pending extraction
+├── map.hpp
+└── task_game.hpp
+src/
+├── ConfigManager/
+├── Core/
+├── GUI/
+├── Game/
+├── Menu/
+├── main.cpp
+├── game.cpp          # Legacy game pending extraction
+├── map.cpp
+└── task_game.cpp
+images/               # Project image assets
+lib/raylib/           # Local Raylib files (ignored by Git)
+build/                # CMake output (ignored by Git)
 ```
 
-## Ownership and Architecture
+## Dependencies and Build
 
-`main.cpp` owns application startup, the window loop, and frame timing. The `Game` class in `game.hpp` and `game.cpp` owns round state, agents, tasks, meetings, voting, and drawing. Raylib is used for input, drawing, and the window; gameplay state stays inside `Game`.
+- C++20 compiler (current setup: MinGW-w64)
+- CMake 3.20 or newer
+- Raylib 6.0 files at `lib/raylib/raylib.h` and `lib/raylib/libraylib.a`
 
-The first prototype keeps the simulation in one class to make the round loop easy to change. Separate game systems can be introduced when the rules grow beyond this MVP.
-
-## Dependencies
-
-- C++20 compiler. The current local setup uses MinGW-w64.
-- CMake 3.20 or newer.
-- Raylib 6.0 static library and `raylib.h` in the ignored `lib/` directory.
-
-The Raylib files are not tracked by Git. A fresh checkout needs compatible local copies at `lib/libraylib.a` and `lib/raylib.h`.
-
-## Build on Windows with MinGW
-
-From the project directory, configure and build with:
+Configure and build from the project directory:
 
 ```powershell
 cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER=g++ -DCMAKE_MAKE_PROGRAM=mingw32-make
 cmake --build build --config Release
 ```
 
-Run the executable:
+Run from the project directory:
 
 ```powershell
 ./build/among_us_prototype.exe
 ```
-
-## Design Notes
-
-`GAME-LOGIC.md` records the genre references and the rules selected for this original prototype. The image files currently present in the local, ignored `images/` folder are not loaded or distributed by the program.
