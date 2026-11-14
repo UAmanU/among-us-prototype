@@ -20,14 +20,14 @@ set_target_properties(raylib PROPERTIES
 
 add_executable(among_us_prototype
     src/main.cpp
-    src/game.cpp
-    src/map.cpp
-    src/task_game.cpp
-    src/Core/ProgrammLauncher.cpp
-    src/Game/GameLauncher.cpp
-    src/ConfigManager/ConfigManager.cpp
-    src/Menu/Menu.cpp
-    src/GUI/MenuRenderer.cpp
+    src/Game/game.cpp
+    src/Map/map.cpp
+    src/Task/task_game.cpp
+    src/Core/programm_launcher.cpp
+    src/Game/game_launcher.cpp
+    src/ConfigManager/config_manager.cpp
+    src/Menu/menu.cpp
+    src/GUI/menu_renderer.cpp
 )
 
 target_include_directories(among_us_prototype PRIVATE include "${RAYLIB_ROOT}")
